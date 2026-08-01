@@ -4,7 +4,7 @@
 
 {% block content %}
 <section class="hero">
-    <h1>DN42 备案查询系统</h1>
+    <h1>DN42 <span>备案查询系统</span></h1>
     <p class="subtitle">查询 dn42 网络资源备案信息 · AS号 · IP段 · 域名 · 维护者</p>
     
     <form class="search-box" action="{{ url_for('main.search') }}" method="get">
@@ -123,7 +123,7 @@
     <!-- 热门查询 -->
     <div class="card">
         <div class="card-header">
-            <h2">⭐ 热门查询</h2>
+            <h2>⭐ 热门查询</h2>
             <a href="{{ url_for('main.browse', obj_type='aut-num', sort='views') }}" class="more-link">查看更多 →</a>
         </div>
         <div class="card-body">
