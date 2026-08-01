@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}管理后台{% endblock %} - DN42 备案系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="{{ url_for('admin.dashboard') }}" class="navbar-brand">
+                <div class="logo">⚙️</div>
+                <div class="brand-text">
+                    <div>管理后台</div>
+                    <div class="sub">DN42 Beian Admin</div>
+                </div>
+            </a>
+            <ul class="navbar-nav">
+                <li><a href="{{ url_for('main.index') }}">返回前台</a></li>
+                <li><a href="{{ url_for('admin.logout') }}">退出登录</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">📊 概览</a></li>
+                <li><a href="{{ url_for('admin.objects') }}" class="{% if request.endpoint == 'admin.objects' %}active{% endif %}">📋 对象管理</a></li>
+            </ul>
+        </aside>
+
+        <div class="admin-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</body>
+</html>

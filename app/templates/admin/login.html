@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录 - DN42 备案系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="{{ url_for('main.index') }}" class="navbar-brand">
+                <div class="logo">🌐</div>
+                <div class="brand-text">
+                    <div>DN42 备案</div>
+                    <div class="sub">返回首页</div>
+                </div>
+            </a>
+        </div>
+    </nav>
+
+    <div class="login-container">
+        <div class="login-box">
+            <h2>管理员登录</h2>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" name="username" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary form-submit">登录</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
