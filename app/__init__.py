@@ -1,7 +1,7 @@
 from flask import Flask
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from config import Config
-from .models import db, User
+from .models import db, User, SyncRecord
 from werkzeug.security import generate_password_hash
 import os
 
@@ -23,6 +23,16 @@ def create_app():
     app.register_blueprint(main, url_prefix='/')
     app.register_blueprint(api, url_prefix='/api')
     app.register_blueprint(admin, url_prefix='/admin')
+    
+    # 全局上下文处理器 - 注入所有模板共用的变量
+    @app.context_processor
+    def inject_global_vars():
+        last_sync = SyncRecord.query.filter_by(status='success').order_by(
+            SyncRecord.sync_time.desc()
+        ).first()
+        return {
+            'last_sync': last_sync,
+        }
     
     # 确保数据目录存在
     os.makedirs(os.path.join(app.root_path, '..', 'data'), exist_ok=True)
