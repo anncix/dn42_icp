@@ -3,81 +3,89 @@
 {% block title %}统计数据 - DN42 备案查询系统{% endblock %}
 
 {% block content %}
-<h1 style="margin-bottom: 24px; font-size: 28px;">📊 数据统计</h1>
+<!-- 页面头部 -->
+<div class="page-header">
+    <h1 class="page-title">
+        <span class="page-icon">📊</span>
+        数据统计
+    </h1>
+    <p class="page-desc">dn42 Registry 数据统计概览</p>
+</div>
 
 <!-- 概览统计 -->
-<div class="stats-overview">
-    {% for type_name, count in type_stats %}
-    <a href="{{ url_for('main.browse', obj_type=type_name) }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">
-            {% if type_name == 'aut-num' %}🏢
-            {% elif type_name == 'dns' %}🔗
-            {% elif type_name == 'inetnum' %}🌐
-            {% elif type_name == 'inet6num' %}🌐
-            {% elif type_name == 'mntner' %}🔑
-            {% elif type_name == 'person' %}👤
-            {% elif type_name == 'organisation' %}🏛️
-            {% elif type_name == 'route' %}🛤️
-            {% elif type_name == 'route6' %}🛤️
-            {% elif type_name == 'as-set' %}📦
-            {% elif type_name == 'as-block' %}📏
-            {% elif type_name == 'role' %}👥
-            {% elif type_name == 'key-cert' %}🔐
-            {% elif type_name == 'telephony' %}📞
-            {% elif type_name == 'route-set' %}📡
-            {% elif type_name == 'registry' %}📋
-            {% else %}📋{% endif %}
+<div class="stats-section">
+    <h2 class="stats-section-title">📈 数据概览</h2>
+    <div class="stats-grid">
+        {% for type_name, count in type_stats %}
+        <a href="{{ url_for('main.browse', obj_type=type_name) }}" style="text-decoration: none; color: inherit;">
+            <div class="stat-card">
+                <div class="stat-label">
+                    <span class="icon">
+                    {% if type_name == 'aut-num' %}🏢
+                    {% elif type_name == 'dns' %}🔗
+                    {% elif type_name == 'inetnum' %}🌐
+                    {% elif type_name == 'inet6num' %}🌐
+                    {% elif type_name == 'mntner' %}🔑
+                    {% elif type_name == 'person' %}👤
+                    {% elif type_name == 'organisation' %}🏛️
+                    {% elif type_name == 'route' %}🛤️
+                    {% elif type_name == 'route6' %}🛤️
+                    {% elif type_name == 'as-set' %}📦
+                    {% elif type_name == 'as-block' %}📏
+                    {% elif type_name == 'role' %}👥
+                    {% elif type_name == 'key-cert' %}🔐
+                    {% elif type_name == 'telephony' %}📞
+                    {% elif type_name == 'route-set' %}📡
+                    {% elif type_name == 'registry' %}📋
+                    {% else %}📋{% endif %}
+                    </span>
+                    {{ type_name }}
+                </div>
+                <div class="stat-num">{{ count }}</div>
             </div>
-            <div class="stat-number">{{ count }}</div>
-            <div class="stat-label">{{ type_name }}</div>
-        </div>
-    </a>
-    {% endfor %}
+        </a>
+        {% endfor %}
+    </div>
 </div>
 
 <!-- 数量排名图表 -->
-<div class="stats-chart">
-    <h3>📈 对象类型数量分布</h3>
+<div class="stats-section">
+    <h2 class="stats-section-title">📊 对象类型数量分布</h2>
     {% set max_count = type_stats[0][1] if type_stats else 1 %}
     <div class="bar-chart">
         {% for type_name, count in type_stats %}
-        <div class="bar-item">
-            <div class="bar-label">{{ type_name }}</div>
-            <div class="bar-track">
-                <div class="bar-fill" style="width: {{ (count / max_count * 100)|round(1) }}%;"></div>
+        <div class="bar-chart-item">
+            <div class="bar-chart-label">{{ type_name }}</div>
+            <div class="bar-chart-track">
+                <div class="bar-chart-fill" style="width: {{ (count / max_count * 100)|round(1) }}%;"></div>
             </div>
-            <div class="bar-value">{{ count }}</div>
+            <div class="bar-chart-value">{{ count }}</div>
         </div>
         {% endfor %}
     </div>
 </div>
 
 <!-- 同步历史 -->
-<div class="card">
-    <div class="card-header">
-        <h2>🔄 同步历史</h2>
-    </div>
-    <div class="card-body">
-        <ul class="sync-list">
-            {% for record in sync_history %}
-            <li>
-                <div class="sync-info">
-                    <div>{{ record.message }}</div>
-                    <div class="sync-time">{{ record.sync_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC</div>
-                </div>
-                <span class="sync-status {{ record.status }}">
-                    {% if record.status == 'success' %}✓ 成功
-                    {% elif record.status == 'failed' %}✗ 失败
-                    {% else %}⟳ 进行中{% endif %}
-                </span>
-            </li>
-            {% else %}
-            <li style="justify-content: center; color: var(--text-muted);">
-                暂无同步记录
-            </li>
-            {% endfor %}
-        </ul>
+<div class="stats-section">
+    <h2 class="stats-section-title">🔄 同步历史</h2>
+    <div class="sync-list">
+        {% for record in sync_history %}
+        <div class="sync-item">
+            <div class="sync-item-left">
+                <div class="sync-item-info">{{ record.message }}</div>
+                <div class="sync-item-time">{{ record.sync_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC</div>
+            </div>
+            <span class="filing-status status-{% if record.status == 'success' %}approved{% elif record.status == 'failed' %}rejected{% else %}pending{% endif %}">
+                {% if record.status == 'success' %}✓ 成功
+                {% elif record.status == 'failed' %}✗ 失败
+                {% else %}⟳ 进行中{% endif %}
+            </span>
+        </div>
+        {% else %}
+        <div class="sync-item" style="justify-content: center; color: var(--text-muted);">
+            暂无同步记录
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

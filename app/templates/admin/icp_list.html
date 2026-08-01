@@ -1,0 +1,163 @@
+{% extends "admin/base.html" %}
+
+{% block title %}ICP备案管理{% endblock %}
+{% block page_title %}📋 ICP 备案管理{% endblock %}
+
+{% block content %}
+
+    <!-- 状态筛选 -->
+    <div class="admin-tabs">
+        <a href="{{ url_for('admin.admin_icp', status='all') }}" class="{% if status == 'all' %}active{% endif %}">
+            全部 <span class="tab-count">{{ status_counts.all }}</span>
+        </a>
+        <a href="{{ url_for('admin.admin_icp', status='pending') }}" class="{% if status == 'pending' %}active{% endif %}">
+            待审核 <span class="tab-count">{{ status_counts.pending }}</span>
+        </a>
+        <a href="{{ url_for('admin.admin_icp', status='approved') }}" class="{% if status == 'approved' %}active{% endif %}">
+            已通过 <span class="tab-count">{{ status_counts.approved }}</span>
+        </a>
+        <a href="{{ url_for('admin.admin_icp', status='rejected') }}" class="{% if status == 'rejected' %}active{% endif %}">
+            已驳回 <span class="tab-count">{{ status_counts.rejected }}</span>
+        </a>
+        <a href="{{ url_for('admin.admin_icp', status='revoked') }}" class="{% if status == 'revoked' %}active{% endif %}">
+            已注销 <span class="tab-count">{{ status_counts.revoked }}</span>
+        </a>
+    </div>
+
+    <!-- 备案列表 -->
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>备案号</th>
+                    <th>网站名称</th>
+                    <th>域名</th>
+                    <th>主体</th>
+                    <th>维护者</th>
+                    <th>状态</th>
+                    <th>申请时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for filing in results.items %}
+                <tr>
+                    <td class="mono">{{ filing.filing_number }}</td>
+                    <td>{{ filing.site_name }}</td>
+                    <td class="mono">{{ filing.domain }}</td>
+                    <td>{{ filing.subject_name }}</td>
+                    <td class="mono">{{ filing.mntner }}</td>
+                    <td>
+                        <span class="filing-status status-{{ filing.status }}">
+                            {% if filing.status == 'approved' %}已通过
+                            {% elif filing.status == 'pending' %}待审核
+                            {% elif filing.status == 'rejected' %}已驳回
+                            {% elif filing.status == 'revoked' %}已注销
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td class="mono">{{ filing.created_at.strftime('%m-%d %H:%M') }}</td>
+                    <td>
+                        <div class="row-actions">
+                            <a href="{{ url_for('main.icp_detail', filing_id=filing.id) }}" target="_blank" class="action-link">查看</a>
+                            {% if filing.status == 'pending' %}
+                            <button type="button" class="action-link action-approve" onclick="reviewFiling({{ filing.id }}, 'approve')">通过</button>
+                            <button type="button" class="action-link action-reject" onclick="reviewFiling({{ filing.id }}, 'reject')">驳回</button>
+                            {% endif %}
+                            {% if filing.status == 'approved' %}
+                            <button type="button" class="action-link action-revoke" onclick="reviewFiling({{ filing.id }}, 'revoke')">注销</button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="empty-cell">暂无备案记录</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分页 -->
+    {% if results.pages > 1 %}
+    <div class="pagination">
+        {% if results.has_prev %}
+        <a href="{{ url_for('admin.admin_icp', page=results.prev_num, status=status) }}">« 上一页</a>
+        {% else %}
+        <span class="disabled">« 上一页</span>
+        {% endif %}
+
+        {% for p in range(1, results.pages + 1) %}
+            {% if p == page %}
+            <span class="current">{{ p }}</span>
+            {% elif p <= 3 or p >= results.pages - 2 or (p >= page - 1 and p <= page + 1) %}
+            <a href="{{ url_for('admin.admin_icp', page=p, status=status) }}">{{ p }}</a>
+            {% elif p == 4 or p == results.pages - 3 %}
+            <span>...</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if results.has_next %}
+        <a href="{{ url_for('admin.admin_icp', page=results.next_num, status=status) }}">下一页 »</a>
+        {% else %}
+        <span class="disabled">下一页 »</span>
+        {% endif %}
+    </div>
+    {% endif %}
+<!-- 审核弹窗 -->
+<div id="reviewModal" class="modal-overlay" style="display:none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">审核备案</h3>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <form id="reviewForm" method="post">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>审核意见</label>
+                    <textarea name="review_note" rows="3" placeholder="填写审核意见（选填）"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button type="submit" class="btn btn-primary">确认</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function reviewFiling(id, action) {
+    const modal = document.getElementById('reviewModal');
+    const form = document.getElementById('reviewForm');
+    const title = document.getElementById('modalTitle');
+    
+    form.action = `/admin/icp/${id}/review`;
+    
+    // 设置action到表单
+    let actionInput = form.querySelector('input[name="action"]');
+    if (!actionInput) {
+        actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        form.appendChild(actionInput);
+    }
+    actionInput.value = action;
+    
+    if (action === 'approve') {
+        title.textContent = '通过备案';
+    } else if (action === 'reject') {
+        title.textContent = '驳回备案';
+    } else if (action === 'revoke') {
+        title.textContent = '注销备案';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('reviewModal').style.display = 'none';
+}
+</script>
+{% endblock %}

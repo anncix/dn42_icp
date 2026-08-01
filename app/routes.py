@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from .models import db, RegistryObject, SyncRecord, User
+from .models import db, RegistryObject, SyncRecord, User, ICPFilings
+import re
+from datetime import datetime
 from .sync import RegistrySyncer
 from config import Config
 import os
@@ -40,11 +42,15 @@ def index():
         SyncRecord.sync_time.desc()
     ).first()
     
+    # ICP备案数量
+    icp_count = ICPFilings.query.filter_by(status='approved').count()
+    
     return render_template('index.html',
                          stats=stats,
                          recent_updates=recent_updates,
                          hot_objects=hot_objects,
-                         last_sync=last_sync)
+                         last_sync=last_sync,
+                         icp_count=icp_count)
 
 
 @main.route('/search')
@@ -243,6 +249,127 @@ def stats():
                          sync_history=sync_history)
 
 
+# ============ ICP 备案路由 ============
+
+@main.route('/icp')
+def icp_index():
+    """ICP备案首页 - 已备案列表"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    query = request.args.get('q', '').strip()
+    
+    q = ICPFilings.query.filter_by(status='approved')
+    
+    if query:
+        search_pattern = f'%{query}%'
+        q = q.filter(or_(
+            ICPFilings.filing_number.like(search_pattern),
+            ICPFilings.site_name.like(search_pattern),
+            ICPFilings.domain.like(search_pattern),
+            ICPFilings.subject_name.like(search_pattern),
+            ICPFilings.as_number.like(search_pattern),
+        ))
+    
+    total = q.count()
+    results = q.order_by(ICPFilings.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    # 统计
+    stats_icp = {
+        'total': ICPFilings.query.count(),
+        'approved': ICPFilings.query.filter_by(status='approved').count(),
+        'pending': ICPFilings.query.filter_by(status='pending').count(),
+    }
+    
+    return render_template('icp/index.html',
+                         results=results,
+                         total=total,
+                         query=query,
+                         stats=stats_icp,
+                         page=page,
+                         per_page=per_page)
+
+
+@main.route('/icp/apply', methods=['GET', 'POST'])
+def icp_apply():
+    """ICP备案申请"""
+    if request.method == 'POST':
+        # 获取表单数据
+        subject_type = request.form.get('subject_type', 'personal')
+        subject_name = request.form.get('subject_name', '').strip()
+        contact_email = request.form.get('contact_email', '').strip()
+        mntner = request.form.get('mntner', '').strip()
+        as_number = request.form.get('as_number', '').strip()
+        site_name = request.form.get('site_name', '').strip()
+        site_url = request.form.get('site_url', '').strip()
+        site_desc = request.form.get('site_desc', '').strip()
+        domain = request.form.get('domain', '').strip()
+        ip_addresses = request.form.get('ip_addresses', '').strip()
+        remarks = request.form.get('remarks', '').strip()
+        
+        # 简单验证
+        errors = []
+        if not subject_name:
+            errors.append('请填写主体名称')
+        if not contact_email or not re.match(r'^[^@]+@[^@]+\.[^@]+$', contact_email):
+            errors.append('请填写有效的联系邮箱')
+        if not mntner:
+            errors.append('请填写维护者(MNTNER)')
+        if not site_name:
+            errors.append('请填写网站名称')
+        if not site_url:
+            errors.append('请填写网站地址')
+        if not domain:
+            errors.append('请填写域名')
+        
+        if errors:
+            for e in errors:
+                flash(e, 'error')
+            return render_template('icp/apply.html', form=request.form)
+        
+        # 生成备案号
+        last_filing = ICPFilings.query.order_by(ICPFilings.id.desc()).first()
+        next_num = (last_filing.id + 1) if last_filing else 1
+        filing_number = f'DN42-ICP-{next_num:06d}'
+        
+        # 创建备案记录
+        filing = ICPFilings(
+            filing_number=filing_number,
+            status='pending',
+            subject_type=subject_type,
+            subject_name=subject_name,
+            contact_email=contact_email,
+            mntner=mntner.upper(),
+            as_number=as_number.upper() if as_number else None,
+            site_name=site_name,
+            site_url=site_url,
+            site_desc=site_desc,
+            domain=domain.lower(),
+            ip_addresses=ip_addresses,
+            remarks=remarks,
+        )
+        db.session.add(filing)
+        db.session.commit()
+        
+        flash('备案申请已提交，请等待审核。备案号：' + filing_number, 'success')
+        return redirect(url_for('main.icp_detail', filing_id=filing.id))
+    
+    return render_template('icp/apply.html', form={})
+
+
+@main.route('/icp/<int:filing_id>')
+def icp_detail(filing_id):
+    """ICP备案详情页"""
+    filing = ICPFilings.query.get_or_404(filing_id)
+    
+    # 增加浏览量
+    filing.view_count += 1
+    db.session.commit()
+    
+    return render_template('icp/detail.html', filing=filing)
+
+
 # ============ API 路由 ============
 
 @api.route('/search')
@@ -411,6 +538,72 @@ def objects():
                          obj_type=obj_type,
                          page=page,
                          per_page=per_page)
+
+
+@admin.route('/icp')
+@login_required
+def admin_icp():
+    """ICP备案管理"""
+    status = request.args.get('status', 'all')
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    q = ICPFilings.query
+    if status != 'all':
+        q = q.filter_by(status=status)
+    
+    total = q.count()
+    results = q.order_by(ICPFilings.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    # 各状态数量
+    status_counts = {
+        'all': total,
+        'pending': ICPFilings.query.filter_by(status='pending').count(),
+        'approved': ICPFilings.query.filter_by(status='approved').count(),
+        'rejected': ICPFilings.query.filter_by(status='rejected').count(),
+        'revoked': ICPFilings.query.filter_by(status='revoked').count(),
+    }
+    
+    return render_template('admin/icp_list.html',
+                         results=results,
+                         total=total,
+                         status=status,
+                         status_counts=status_counts,
+                         page=page,
+                         per_page=per_page)
+
+
+@admin.route('/icp/<int:filing_id>/review', methods=['POST'])
+@login_required
+def admin_icp_review(filing_id):
+    """审核ICP备案"""
+    filing = ICPFilings.query.get_or_404(filing_id)
+    action = request.form.get('action', '')
+    note = request.form.get('review_note', '').strip()
+    
+    if action == 'approve':
+        filing.status = 'approved'
+        filing.review_note = note
+        filing.reviewed_at = datetime.utcnow()
+        filing.reviewed_by = current_user.username
+        flash('备案已通过审核', 'success')
+    elif action == 'reject':
+        filing.status = 'rejected'
+        filing.review_note = note
+        filing.reviewed_at = datetime.utcnow()
+        filing.reviewed_by = current_user.username
+        flash('备案已驳回', 'warning')
+    elif action == 'revoke':
+        filing.status = 'revoked'
+        filing.review_note = note
+        filing.reviewed_at = datetime.utcnow()
+        filing.reviewed_by = current_user.username
+        flash('备案已注销', 'error')
+    
+    db.session.commit()
+    return redirect(url_for('admin.admin_icp', status='all'))
 
 
 # ============ 工具函数 ============

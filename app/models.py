@@ -90,3 +90,63 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256))
     is_admin = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ICPFilings(db.Model):
+    """DN42 ICP 备案表"""
+    __tablename__ = 'icp_filings'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    filing_number = db.Column(db.String(32), unique=True, index=True)  # 备案号：DN42-ICP-XXXXXX
+    status = db.Column(db.String(16), default='pending', index=True)  # pending/approved/rejected/revoked
+    
+    # 主体信息
+    subject_type = db.Column(db.String(16), default='personal')  # personal / organization
+    subject_name = db.Column(db.String(128))  # 主体名称（个人/组织名）
+    contact_email = db.Column(db.String(128))  # 联系邮箱
+    mntner = db.Column(db.String(64), index=True)  # 对应的 dn42 维护者
+    as_number = db.Column(db.String(32), index=True)  # 对应的 AS 号
+    
+    # 网站信息
+    site_name = db.Column(db.String(128))  # 网站名称
+    site_url = db.Column(db.String(256))  # 网站地址
+    site_desc = db.Column(db.Text)  # 网站简介
+    domain = db.Column(db.String(128), index=True)  # 域名
+    
+    # 其他
+    ip_addresses = db.Column(db.Text)  # 服务器IP（逗号分隔）
+    remarks = db.Column(db.Text)  # 备注
+    
+    # 审核
+    review_note = db.Column(db.Text)  # 审核意见
+    reviewed_at = db.Column(db.DateTime)  # 审核时间
+    reviewed_by = db.Column(db.String(64))  # 审核人
+    
+    # 时间
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    view_count = db.Column(db.Integer, default=0)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'filing_number': self.filing_number,
+            'status': self.status,
+            'subject_type': self.subject_type,
+            'subject_name': self.subject_name,
+            'contact_email': self.contact_email,
+            'mntner': self.mntner,
+            'as_number': self.as_number,
+            'site_name': self.site_name,
+            'site_url': self.site_url,
+            'site_desc': self.site_desc,
+            'domain': self.domain,
+            'ip_addresses': self.ip_addresses,
+            'remarks': self.remarks,
+            'review_note': self.review_note,
+            'reviewed_at': self.reviewed_at.isoformat() if self.reviewed_at else None,
+            'reviewed_by': self.reviewed_by,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'view_count': self.view_count,
+        }

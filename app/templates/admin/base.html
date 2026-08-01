@@ -5,43 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}管理后台{% endblock %} - DN42 备案系统</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-inner">
-            <a href="{{ url_for('admin.dashboard') }}" class="navbar-brand">
-                <div class="logo">⚙️</div>
-                <div class="brand-text">
-                    <div>管理后台</div>
-                    <div class="sub">DN42 Beian Admin</div>
-                </div>
-            </a>
-            <ul class="navbar-nav">
-                <li><a href="{{ url_for('main.index') }}">返回前台</a></li>
-                <li><a href="{{ url_for('admin.logout') }}">退出登录</a></li>
-            </ul>
-        </div>
-    </nav>
-
     <div class="admin-layout">
+        <!-- 侧边栏 -->
         <aside class="admin-sidebar">
-            <ul class="sidebar-menu">
-                <li><a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">📊 概览</a></li>
-                <li><a href="{{ url_for('admin.objects') }}" class="{% if request.endpoint == 'admin.objects' %}active{% endif %}">📋 对象管理</a></li>
+            <div class="admin-sidebar-header">
+                <a href="{{ url_for('admin.dashboard') }}" class="admin-logo">
+                    <div class="logo-icon">🌐</div>
+                    <div class="admin-logo-text">DN42 管理后台</div>
+                </a>
+            </div>
+            
+            <ul class="admin-nav">
+                <li>
+                    <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                        <span class="nav-icon">📊</span>
+                        <span>概览</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin.objects') }}" class="{% if request.endpoint == 'admin.objects' %}active{% endif %}">
+                        <span class="nav-icon">📋</span>
+                        <span>对象管理</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('admin.admin_icp') }}" class="{% if 'icp' in (request.endpoint or '') %}active{% endif %}">
+                        <span class="nav-icon">📝</span>
+                        <span>ICP审核</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('main.index') }}">
+                        <span class="nav-icon">🏠</span>
+                        <span>返回前台</span>
+                    </a>
+                </li>
             </ul>
+            
+            <div class="admin-sidebar-footer">
+                <div class="admin-user">
+                    <div class="admin-user-avatar">{{ current_user.username[0]|upper if current_user.is_authenticated else 'A' }}</div>
+                    <div class="admin-user-info">
+                        <div class="name">{{ current_user.username if current_user.is_authenticated else 'Admin' }}</div>
+                        <div class="role">管理员</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('admin.logout') }}" class="admin-logout-btn">退出登录</a>
+            </div>
         </aside>
 
-        <div class="admin-content">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="flash-message {{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+        <!-- 主内容区 -->
+        <div class="admin-main">
+            <div class="admin-topbar">
+                <div class="admin-topbar-title">{% block page_title %}管理后台{% endblock %}</div>
+                <div class="admin-topbar-actions">
+                    {% block topbar_actions %}{% endblock %}
+                </div>
+            </div>
             
-            {% block content %}{% endblock %}
+            <div class="admin-content">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="flash-message {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </div>
         </div>
     </div>
+
+    {% block scripts %}{% endblock %}
 </body>
 </html>

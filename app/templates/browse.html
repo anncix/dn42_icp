@@ -10,30 +10,49 @@
     <span>{{ type_name }}</span>
 </div>
 
-<div class="card" style="margin-bottom: 20px;">
-    <div class="card-header">
-        <h2>{{ type_name }} ({{ total }})</h2>
+<!-- 页面头部 -->
+<div class="page-header">
+    <h1 class="page-title">
+        <span class="page-icon">
+        {% if obj_type == 'aut-num' %}🏢
+        {% elif obj_type == 'dns' %}🔗
+        {% elif obj_type == 'inetnum' %}🌐
+        {% elif obj_type == 'inet6num' %}🌐
+        {% elif obj_type == 'mntner' %}🔑
+        {% elif obj_type == 'person' %}👤
+        {% elif obj_type == 'organisation' %}🏛️
+        {% elif obj_type == 'route' or obj_type == 'route6' %}🛤️
+        {% elif obj_type == 'as-set' %}📦
+        {% elif obj_type == 'role' %}👥
+        {% else %}📋{% endif %}
+        </span>
+        {{ type_name }}
+    </h1>
+    <p class="page-desc">共 {{ total }} 条记录</p>
+</div>
+
+<!-- 排序栏 -->
+<div class="sort-bar">
+    <div class="sort-bar-left">
+        <span style="font-size: 13px; color: var(--text-tertiary);">排序：</span>
+        <a href="{{ url_for('main.browse', obj_type=obj_type, sort='key') }}" class="sort-btn {% if sort == 'key' %}active{% endif %}">
+            按名称
+        </a>
+        <a href="{{ url_for('main.browse', obj_type=obj_type, sort='views') }}" class="sort-btn {% if sort == 'views' %}active{% endif %}">
+            按热度
+        </a>
     </div>
-    <div class="card-body">
-        <!-- 排序 -->
-        <div class="sort-bar">
-            <span style="font-size: 13px; color: var(--text-muted); padding: 6px 0;">排序：</span>
-            <a href="{{ url_for('main.browse', obj_type=obj_type, sort='key') }}" class="{% if sort == 'key' %}active{% endif %}">
-                按名称
-            </a>
-            <a href="{{ url_for('main.browse', obj_type=obj_type, sort='views') }}" class="{% if sort == 'views' %}active{% endif %}">
-                按热度
-            </a>
-        </div>
+    <div class="sort-bar-right">
+        共 {{ total }} 条
     </div>
 </div>
 
 {% if results and results.items %}
-<div class="card">
-    <div class="card-body">
-        {% for obj in results.items %}
-        <a href="{{ url_for('main.detail', obj_type=obj.obj_type, obj_key=obj.obj_key) }}" class="list-item">
-            <div class="item-icon">
+<div style="display: flex; flex-direction: column; gap: 10px;">
+    {% for obj in results.items %}
+    <a href="{{ url_for('main.detail', obj_type=obj.obj_type, obj_key=obj.obj_key) }}" class="list-item">
+        <div class="list-item-main" style="display: flex; align-items: center; gap: 14px;">
+            <div style="font-size: 20px;">
             {% if obj.obj_type == 'aut-num' %}🏢
             {% elif obj.obj_type == 'dns' %}🔗
             {% elif obj.obj_type == 'inetnum' %}🌐
@@ -46,18 +65,19 @@
             {% elif obj.obj_type == 'role' %}👥
             {% else %}📋{% endif %}
             </div>
-            <div class="item-content">
-                <div class="item-title">{{ obj.obj_name or obj.obj_key }}</div>
-                <div class="item-desc">{{ obj.obj_key }}
+            <div>
+                <div class="list-item-title">{{ obj.obj_name or obj.obj_key }}</div>
+                <div class="list-item-sub">{{ obj.obj_key }}
                     {% if obj.mnt_by %} · mnt: {{ obj.mnt_by }}{% endif %}
                 </div>
             </div>
-            <div class="item-meta">
-                {% if sort == 'views' %}{{ obj.view_count }} 次{% endif %}
-            </div>
-        </a>
-        {% endfor %}
-    </div>
+        </div>
+        <div class="list-item-meta">
+            {% if sort == 'views' %}<span style="font-size: 13px; color: var(--text-tertiary);">{{ obj.view_count }} 次浏览</span>{% endif %}
+            <span class="list-item-arrow">→</span>
+        </div>
+    </a>
+    {% endfor %}
 </div>
 
 <!-- 分页 -->

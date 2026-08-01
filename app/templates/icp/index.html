@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}ICP 备案查询 - DN42 备案查询系统{% endblock %}
+
+{% block content %}
+<div class="icp-page">
+    <!-- 页面头部 -->
+    <div class="page-header">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <h1 class="page-title">
+                    <span class="page-icon">📋</span>
+                    DN42 ICP 备案查询
+                </h1>
+                <p class="page-desc">查询 dn42 网络中的网站 ICP 备案信息</p>
+            </div>
+            <a href="{{ url_for('main.icp_apply') }}" class="btn btn-primary">
+                <span>➕</span> 申请备案
+            </a>
+        </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="stat-card">
+            <div class="stat-label">已备案</div>
+            <div class="stat-num">{{ stats.approved }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">审核中</div>
+            <div class="stat-num">{{ stats.pending }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">累计申请</div>
+            <div class="stat-num">{{ stats.total }}</div>
+        </div>
+    </div>
+
+    <!-- 搜索框 -->
+    <form class="page-search-box" method="get" action="{{ url_for('main.icp_index') }}">
+        <input type="text" name="q" placeholder="搜索备案号 / 网站名 / 域名 / AS号" value="{{ query }}">
+        <button type="submit" class="btn btn-primary">搜索</button>
+    </form>
+
+    <!-- 结果计数 -->
+    {% if query %}
+    <div style="margin-bottom: 16px; font-size: 14px; color: var(--text-tertiary);">
+        找到 <strong style="color: var(--text-primary);">{{ total }}</strong> 条与「{{ query }}」相关的备案
+    </div>
+    {% endif %}
+
+    <!-- 备案列表 -->
+    <div class="filing-list">
+        {% for filing in results.items %}
+        <a href="{{ url_for('main.icp_detail', filing_id=filing.id) }}" class="filing-item">
+            <div class="filing-item-left">
+                <div class="filing-item-header">
+                    <span class="filing-number">{{ filing.filing_number }}</span>
+                    <span class="filing-site-name">{{ filing.site_name }}</span>
+                </div>
+                <div class="filing-item-meta">
+                    <span class="mono">{{ filing.site_url }}</span>
+                </div>
+            </div>
+            <div class="filing-item-right">
+                <span class="filing-status status-{{ filing.status }}">
+                    {% if filing.status == 'approved' %}✓ 已通过
+                    {% elif filing.status == 'pending' %}⏳ 审核中
+                    {% elif filing.status == 'rejected' %}✕ 已驳回
+                    {% elif filing.status == 'revoked' %}⊘ 已注销
+                    {% endif %}
+                </span>
+                <span class="filing-date">{{ filing.created_at.strftime('%Y-%m-%d') }}</span>
+                <span class="filing-arrow">→</span>
+            </div>
+        </a>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">暂无备案记录</div>
+            <div class="empty-hint">
+                {% if query %}换个关键词试试，或{% endif %}
+                <a href="{{ url_for('main.icp_apply') }}">立即申请备案</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 分页 -->
+    {% if results.pages > 1 %}
+    <div class="pagination">
+        {% if results.has_prev %}
+        <a href="{{ url_for('main.icp_index', page=results.prev_num, q=query) }}">« 上一页</a>
+        {% else %}
+        <span class="disabled">« 上一页</span>
+        {% endif %}
+
+        {% for p in range(1, results.pages + 1) %}
+            {% if p == page %}
+            <span class="current">{{ p }}</span>
+            {% elif p <= 3 or p >= results.pages - 2 or (p >= page - 1 and p <= page + 1) %}
+            <a href="{{ url_for('main.icp_index', page=p, q=query) }}">{{ p }}</a>
+            {% elif p == 4 or p == results.pages - 3 %}
+            <span>...</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if results.has_next %}
+        <a href="{{ url_for('main.icp_index', page=results.next_num, q=query) }}">下一页 »</a>
+        {% else %}
+        <span class="disabled">下一页 »</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -3,151 +3,102 @@
 {% block title %}DN42 备案查询系统{% endblock %}
 
 {% block content %}
-<section class="hero">
-    <h1>DN42 <span>备案查询系统</span></h1>
-    <p class="subtitle">查询 dn42 网络资源备案信息 · AS号 · IP段 · 域名 · 维护者</p>
-    
+<div class="home-hero">
+    <!-- Logo & Title -->
+    <div class="hero-logo">🌐</div>
+    <h1 class="hero-title">DN42 备案查询</h1>
+    <p class="hero-subtitle">查询 dn42 网络资源备案信息 · 快速 · 准确 · 全面</p>
+
+    <!-- Search Box -->
     <form class="search-box" action="{{ url_for('main.search') }}" method="get">
-        <input type="text" class="search-input" name="q" placeholder="输入 AS号 / 域名 / IP / 维护者 等关键词" autofocus>
-        <button type="submit" class="search-btn">查询</button>
+        <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="q" placeholder="输入 AS号 / 域名 / IP / 维护者 等关键词" autofocus>
+            <button type="submit" class="search-btn">查询</button>
+        </div>
     </form>
-    
+
+    <!-- Quick Type Filters -->
     <div class="search-types">
-        <a href="{{ url_for('main.browse', obj_type='aut-num') }}" class="type-tag">🏢 自治系统</a>
-        <a href="{{ url_for('main.browse', obj_type='inetnum') }}" class="type-tag">🌐 IPv4</a>
-        <a href="{{ url_for('main.browse', obj_type='inet6num') }}" class="type-tag">🌐 IPv6</a>
-        <a href="{{ url_for('main.browse', obj_type='dns') }}" class="type-tag">🔗 域名</a>
-        <a href="{{ url_for('main.browse', obj_type='mntner') }}" class="type-tag">👤 维护者</a>
-        <a href="{{ url_for('main.browse', obj_type='person') }}" class="type-tag">👥 联系人</a>
-    </div>
-</section>
-
-<!-- 统计数据 -->
-<div class="stats-grid">
-    <a href="{{ url_for('main.browse', obj_type='aut-num') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🏢</div>
-            <div class="stat-number">{{ stats.get('aut-num', 0) }}</div>
-            <div class="stat-label">自治系统</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='inetnum') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🌐</div>
-            <div class="stat-number">{{ stats.get('inetnum', 0) }}</div>
-            <div class="stat-label">IPv4 地址段</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='inet6num') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🔗</div>
-            <div class="stat-number">{{ stats.get('inet6num', 0) }}</div>
-            <div class="stat-label">IPv6 地址段</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='dns') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🏷️</div>
-            <div class="stat-number">{{ stats.get('dns', 0) }}</div>
-            <div class="stat-label">域名</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='mntner') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🔑</div>
-            <div class="stat-number">{{ stats.get('mntner', 0) }}</div>
-            <div class="stat-label">维护者</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='person') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">👤</div>
-            <div class="stat-number">{{ stats.get('person', 0) }}</div>
-            <div class="stat-label">个人联系人</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='organisation') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🏛️</div>
-            <div class="stat-number">{{ stats.get('organisation', 0) }}</div>
-            <div class="stat-label">组织</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.stats') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div class="stat-number">{{ stats.values() | sum }}</div>
-            <div class="stat-label">总记录数</div>
-        </div>
-    </a>
-</div>
-
-<!-- 两列布局 -->
-<div class="two-col">
-    <!-- 最近更新 -->
-    <div class="card">
-        <div class="card-header">
-            <h2>🔥 最近更新</h2>
-            <a href="{{ url_for('main.browse', obj_type='aut-num', sort='views') }}" class="more-link">查看更多 →</a>
-        </div>
-        <div class="card-body">
-            {% for obj in recent_updates %}
-            <a href="{{ url_for('main.detail', obj_type=obj.obj_type, obj_key=obj.obj_key) }}" class="list-item">
-                <div class="item-icon">
-                {% if obj.obj_type == 'aut-num' %}🏢
-                {% elif obj.obj_type == 'dns' %}🔗
-                {% elif obj.obj_type == 'inetnum' %}🌐
-                {% elif obj.obj_type == 'inet6num' %}🌐
-                {% elif obj.obj_type == 'mntner' %}🔑
-                {% elif obj.obj_type == 'person' %}👤
-                {% elif obj.obj_type == 'organisation' %}🏛️
-                {% else %}📋{% endif %}
-                </div>
-                <div class="item-content">
-                    <div class="item-title">{{ obj.obj_name or obj.obj_key }}</div>
-                    <div class="item-desc">{{ obj.obj_key }}</div>
-                </div>
-                <span class="type-badge {{ obj.obj_type if obj.obj_type in ['aut-num','inetnum','inet6num','dns','mntner','person','organisation','route','route6'] else 'default' }}">
-                    {{ obj.obj_type }}
-                </span>
-            </a>
-            {% else %}
-            <div class="empty-state">
-                <div class="empty-icon">📭</div>
-                <div class="empty-text">暂无数据</div>
-            </div>
-            {% endfor %}
-        </div>
+        <button type="button" class="type-tag active" data-type="all">全部</button>
+        <button type="button" class="type-tag" data-type="aut-num">自治系统</button>
+        <button type="button" class="type-tag" data-type="inetnum">IPv4</button>
+        <button type="button" class="type-tag" data-type="inet6num">IPv6</button>
+        <button type="button" class="type-tag" data-type="dns">域名</button>
+        <button type="button" class="type-tag" data-type="mntner">维护者</button>
     </div>
 
-    <!-- 热门查询 -->
-    <div class="card">
-        <div class="card-header">
-            <h2>⭐ 热门查询</h2>
-            <a href="{{ url_for('main.browse', obj_type='aut-num', sort='views') }}" class="more-link">查看更多 →</a>
-        </div>
-        <div class="card-body">
-            {% for obj in hot_objects %}
-            <a href="{{ url_for('main.detail', obj_type=obj.obj_type, obj_key=obj.obj_key) }}" class="list-item">
-                <div class="item-icon">
-                {% if obj.obj_type == 'aut-num' %}🏢
-                {% elif obj.obj_type == 'dns' %}🔗
-                {% elif obj.obj_type == 'mntner' %}🔑
-                {% else %}📋{% endif %}
-                </div>
-                <div class="item-content">
-                    <div class="item-title">{{ obj.obj_name or obj.obj_key }}</div>
-                    <div class="item-desc">{{ obj.obj_key }}</div>
-                </div>
-                <div class="item-meta">{{ obj.view_count }} 次</div>
-            </a>
-            {% else %}
-            <div class="empty-state">
-                <div class="empty-icon">📭</div>
-                <div class="empty-text">暂无数据</div>
-            </div>
-            {% endfor %}
-        </div>
+    <!-- Quick Links -->
+    <div class="quick-links">
+        <a href="{{ url_for('main.browse', obj_type='aut-num') }}" class="quick-link">
+            <div class="ql-icon">🏢</div>
+            <div class="ql-label">自治系统</div>
+            <div class="ql-count">{{ stats.get('aut-num', 0) }} 个</div>
+        </a>
+        <a href="{{ url_for('main.browse', obj_type='inetnum') }}" class="quick-link">
+            <div class="ql-icon">🌐</div>
+            <div class="ql-label">IPv4 段</div>
+            <div class="ql-count">{{ stats.get('inetnum', 0) }} 个</div>
+        </a>
+        <a href="{{ url_for('main.browse', obj_type='inet6num') }}" class="quick-link">
+            <div class="ql-icon">🔗</div>
+            <div class="ql-label">IPv6 段</div>
+            <div class="ql-count">{{ stats.get('inet6num', 0) }} 个</div>
+        </a>
+        <a href="{{ url_for('main.browse', obj_type='dns') }}" class="quick-link">
+            <div class="ql-icon">🌍</div>
+            <div class="ql-label">域名</div>
+            <div class="ql-count">{{ stats.get('dns', 0) }} 个</div>
+        </a>
+        <a href="{{ url_for('main.icp_index') }}" class="quick-link">
+            <div class="ql-icon">📋</div>
+            <div class="ql-label">ICP备案</div>
+            <div class="ql-count">{{ icp_count or 0 }} 个</div>
+        </a>
+    </div>
+
+    <!-- Bottom Stats -->
+    <div class="overview-bar">
+        <div class="status-dot"></div>
+        <span>收录 <span class="count">{{ stats.values() | sum }}</span> 条备案数据</span>
+        <span>·</span>
+        <span>最后同步于 {% if last_sync %}{{ last_sync.sync_time.strftime('%Y-%m-%d %H:%M') }} UTC{% else %}--{% endif %}</span>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 类型选择
+document.querySelectorAll('.type-tag').forEach(pill => {
+    pill.addEventListener('click', function() {
+        document.querySelectorAll('.type-tag').forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+        
+        const type = this.dataset.type;
+        const form = document.querySelector('.search-box form');
+        const input = document.querySelector('.search-input-wrap input');
+        
+        // 如果有输入内容，直接跳转搜索
+        if (input.value.trim()) {
+            const url = new URL(form.action, window.location.origin);
+            url.searchParams.set('q', input.value);
+            url.searchParams.set('type', type);
+            window.location.href = url.toString();
+        }
+    });
+});
+
+// 导航栏滚动效果
+const navbar = document.querySelector('.navbar');
+if (navbar) {
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 10) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+}
+</script>
 {% endblock %}

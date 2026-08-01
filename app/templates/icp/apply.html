@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}申请 ICP 备案 - DN42 备案查询系统{% endblock %}
+
+{% block content %}
+<div class="apply-container">
+    <div class="apply-header">
+        <h2>📝 申请 DN42 ICP 备案</h2>
+        <p>填写以下信息提交备案申请，审核通过后将获得专属备案号</p>
+    </div>
+
+    <div class="apply-card">
+        <form class="apply-form" method="post" action="{{ url_for('main.icp_apply') }}">
+            <!-- 主体信息 -->
+            <div class="form-section">
+                <h3><span class="section-icon">👤</span>主体信息</h3>
+                
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>主体类型 <span class="required">*</span></label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="subject_type" value="personal" {% if form.get('subject_type', 'personal') == 'personal' %}checked{% endif %}>
+                                <span>个人</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="subject_type" value="organization" {% if form.get('subject_type') == 'organization' %}checked{% endif %}>
+                                <span>组织/团队</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>主体名称 <span class="required">*</span></label>
+                        <input type="text" name="subject_name" placeholder="个人昵称 / 组织名称" value="{{ form.get('subject_name', '') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>联系邮箱 <span class="required">*</span></label>
+                        <input type="email" name="contact_email" placeholder="用于接收审核通知" value="{{ form.get('contact_email', '') }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>维护者 (MNTNER) <span class="required">*</span></label>
+                        <input type="text" name="mntner" placeholder="例：ALICE-MNT" value="{{ form.get('mntner', '') }}" required>
+                        <small class="form-hint">需在 dn42 registry 中注册的维护者</small>
+                    </div>
+                    <div class="form-group">
+                        <label>AS 号</label>
+                        <input type="text" name="as_number" placeholder="例：AS4242420001" value="{{ form.get('as_number', '') }}">
+                        <small class="form-hint">选填，你所拥有的自治系统号</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 网站信息 -->
+            <div class="form-section">
+                <h3><span class="section-icon">🌐</span>网站信息</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>网站名称 <span class="required">*</span></label>
+                        <input type="text" name="site_name" placeholder="你的网站名称" value="{{ form.get('site_name', '') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>网站地址 <span class="required">*</span></label>
+                        <input type="url" name="site_url" placeholder="https://example.dn42" value="{{ form.get('site_url', '') }}" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>域名 <span class="required">*</span></label>
+                        <input type="text" name="domain" placeholder="例：example.dn42" value="{{ form.get('domain', '') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>服务器 IP</label>
+                        <input type="text" name="ip_addresses" placeholder="多个IP用逗号分隔" value="{{ form.get('ip_addresses', '') }}">
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>网站简介</label>
+                    <textarea name="site_desc" rows="3" placeholder="简要描述你的网站内容和用途">{{ form.get('site_desc', '') }}</textarea>
+                </div>
+            </div>
+
+            <!-- 备注 -->
+            <div class="form-section">
+                <h3><span class="section-icon">📝</span>其他信息</h3>
+                <div class="form-group full-width">
+                    <label>备注说明</label>
+                    <textarea name="remarks" rows="2" placeholder="其他需要说明的信息（选填）">{{ form.get('remarks', '') }}</textarea>
+                </div>
+            </div>
+
+            <!-- 提交 -->
+            <div class="form-actions">
+                <a href="{{ url_for('main.icp_index') }}" class="btn btn-secondary">取消</a>
+                <div class="form-actions-right">
+                    <button type="submit" class="btn btn-primary">提交备案申请</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- 说明 -->
+    <div class="apply-notes">
+        <h4>📌 备案说明</h4>
+        <ul>
+            <li>DN42 ICP 备案是 dn42 网络社区的自发性备案制度，<strong>并非</strong>法律意义上的 ICP 备案</li>
+            <li>备案需拥有有效的 dn42 维护者 (MNTNER) 身份</li>
+            <li>审核时间一般为 1-3 个工作日，审核结果将通过邮件通知</li>
+            <li>通过审核后，你将获得专属备案号，可在网站页脚展示</li>
+            <li>备案信息必须真实有效，虚假信息将被驳回并取消备案资格</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

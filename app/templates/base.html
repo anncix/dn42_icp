@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
 </head>
-<body>
+<body class="{% if request.endpoint == 'main.index' %}page-home{% endif %}">
     <nav class="navbar">
         <div class="navbar-inner">
             <a href="{{ url_for('main.index') }}" class="navbar-brand">
@@ -21,6 +21,7 @@
                 <li><a href="{{ url_for('main.index') }}" class="{% if request.endpoint == 'main.index' %}active{% endif %}">首页</a></li>
                 <li><a href="{{ url_for('main.search') }}" class="{% if request.endpoint == 'main.search' %}active{% endif %}">查询</a></li>
                 <li><a href="{{ url_for('main.browse', obj_type='aut-num') }}" class="{% if request.endpoint == 'main.browse' %}active{% endif %}">浏览</a></li>
+                <li><a href="{{ url_for('main.icp_index') }}" class="{% if 'icp' in (request.endpoint or '') %}active{% endif %}">ICP备案</a></li>
                 <li><a href="{{ url_for('main.stats') }}" class="{% if request.endpoint == 'main.stats' %}active{% endif %}">统计</a></li>
                 {% if current_user.is_authenticated %}
                 <li><a href="{{ url_for('admin.dashboard') }}">管理</a></li>

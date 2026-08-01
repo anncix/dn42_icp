@@ -1,97 +1,86 @@
 {% extends "admin/base.html" %}
 
 {% block title %}对象管理{% endblock %}
+{% block page_title %}📋 对象管理{% endblock %}
 
 {% block content %}
-<h1>📋 对象管理</h1>
-
 <!-- 类型筛选 -->
-<div class="card" style="margin-bottom: 20px;">
-    <div class="card-body">
-        <div class="search-types" style="justify-content: flex-start; margin: 0;">
-            <a href="{{ url_for('admin.objects', type='all') }}" class="type-tag {% if obj_type == 'all' %}active{% endif %}">
-                全部
-            </a>
-            {% set types = ['aut-num', 'inetnum', 'inet6num', 'dns', 'mntner', 'person', 'organisation', 'route', 'route6', 'as-set', 'role', 'as-block', 'key-cert', 'telephony', 'route-set'] %}
-            {% for t in types %}
-            <a href="{{ url_for('admin.objects', type=t) }}" class="type-tag {% if obj_type == t %}active{% endif %}">
-                {{ t }}
-            </a>
-            {% endfor %}
-        </div>
-    </div>
+<div class="admin-tabs">
+    <a href="{{ url_for('admin.objects', type='all') }}" class="{% if obj_type == 'all' %}active{% endif %}">
+        全部 <span class="tab-count">{{ total }}</span>
+    </a>
+    {% set types = ['aut-num', 'inetnum', 'inet6num', 'dns', 'mntner', 'person', 'organisation', 'route', 'route6'] %}
+    {% for t in types %}
+    <a href="{{ url_for('admin.objects', type=t) }}" class="{% if obj_type == t %}active{% endif %}">
+        {{ t }}
+    </a>
+    {% endfor %}
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <h2>对象列表 ({{ total }})</h2>
-    </div>
-    <div class="card-body">
-        {% if results and results.items %}
-        <table class="attr-table" style="margin-bottom: 0;">
-            <thead>
-                <tr style="border-bottom: 2px solid var(--card-border);">
-                    <th style="width: 120px;">类型</th>
-                    <th>主键</th>
-                    <th>名称</th>
-                    <th style="width: 160px;">维护者</th>
-                    <th style="width: 160px;">更新时间</th>
-                    <th style="width: 80px;">操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for obj in results.items %}
-                <tr>
-                    <td>
-                        <span class="type-badge {{ obj.obj_type if obj.obj_type in ['aut-num','inetnum','inet6num','dns','mntner','person','organisation','route','route6'] else 'default' }}">
-                            {{ obj.obj_type }}
-                        </span>
-                    </td>
-                    <td style="font-family: monospace; font-size: 12px;">{{ obj.obj_key }}</td>
-                    <td>{{ obj.obj_name or '-' }}</td>
-                    <td>{{ obj.mnt_by or '-' }}</td>
-                    <td style="font-size: 12px; color: var(--text-muted);">{{ obj.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>
-                        <a href="{{ url_for('main.detail', obj_type=obj.obj_type, obj_key=obj.obj_key) }}" class="btn btn-secondary btn-sm">查看</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        
-        <!-- 分页 -->
-        {% if results.pages > 1 %}
-        <div class="pagination">
-            {% if results.has_prev %}
-            <a href="{{ url_for('admin.objects', type=obj_type, page=results.prev_num) }}">上一页</a>
+<!-- 对象列表 -->
+<div class="admin-table-wrap">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>类型</th>
+                <th>主键</th>
+                <th>名称</th>
+                <th>维护者</th>
+                <th>更新时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for obj in results.items %}
+            <tr>
+                <td>
+                    <span class="type-badge {{ obj.obj_type if obj.obj_type in ['aut-num','inetnum','inet6num','dns','mntner','person','organisation','route','route6'] else 'default' }}">
+                        {{ obj.obj_type }}
+                    </span>
+                </td>
+                <td class="mono">{{ obj.obj_key }}</td>
+                <td>{{ obj.obj_name or '-' }}</td>
+                <td>{{ obj.mnt_by or '-' }}</td>
+                <td class="mono">{{ obj.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <div class="row-actions">
+                        <a href="{{ url_for('main.detail', obj_type=obj.obj_type, obj_key=obj.obj_key) }}" target="_blank" class="action-link">查看</a>
+                    </div>
+                </td>
+            </tr>
             {% else %}
-            <span class="disabled">上一页</span>
-            {% endif %}
-            
-            {% for p in range(1, results.pages + 1) %}
-                {% if p == results.page %}
-                <span class="current">{{ p }}</span>
-                {% elif p <= 3 or p >= results.pages - 2 or (p >= results.page - 1 and p <= results.page + 1) %}
-                <a href="{{ url_for('admin.objects', type=obj_type, page=p) }}">{{ p }}</a>
-                {% elif p == 4 or p == results.pages - 3 %}
-                <span>...</span>
-                {% endif %}
+            <tr>
+                <td colspan="6" class="empty-cell">暂无数据</td>
+            </tr>
             {% endfor %}
-            
-            {% if results.has_next %}
-            <a href="{{ url_for('admin.objects', type=obj_type, page=results.next_num) }}">下一页</a>
-            {% else %}
-            <span class="disabled">下一页</span>
-            {% endif %}
-        </div>
-        {% endif %}
-        
-        {% else %}
-        <div class="empty-state">
-            <div class="empty-icon">📭</div>
-            <div class="empty-text">暂无数据</div>
-        </div>
-        {% endif %}
-    </div>
+        </tbody>
+    </table>
 </div>
+
+<!-- 分页 -->
+{% if results.pages > 1 %}
+<div class="pagination">
+    {% if results.has_prev %}
+    <a href="{{ url_for('admin.objects', type=obj_type, page=results.prev_num) }}">« 上一页</a>
+    {% else %}
+    <span class="disabled">« 上一页</span>
+    {% endif %}
+    
+    {% for p in range(1, results.pages + 1) %}
+        {% if p == results.page %}
+        <span class="current">{{ p }}</span>
+        {% elif p <= 3 or p >= results.pages - 2 or (p >= results.page - 1 and p <= results.page + 1) %}
+        <a href="{{ url_for('admin.objects', type=obj_type, page=p) }}">{{ p }}</a>
+        {% elif p == 4 or p == results.pages - 3 %}
+        <span class="ellipsis">...</span>
+        {% endif %}
+    {% endfor %}
+    
+    {% if results.has_next %}
+    <a href="{{ url_for('admin.objects', type=obj_type, page=results.next_num) }}">下一页 »</a>
+    {% else %}
+    <span class="disabled">下一页 »</span>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}

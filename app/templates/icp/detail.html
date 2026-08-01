@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}{{ filing.site_name }} - ICP 备案详情{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+    <!-- 面包屑 -->
+    <div class="breadcrumb">
+        <a href="{{ url_for('main.icp_index') }}">ICP备案</a>
+        <span class="sep">/</span>
+        <span>{{ filing.filing_number }}</span>
+    </div>
+
+    <!-- 备案头部 -->
+    <div class="icp-detail-header">
+        <span class="icp-detail-status {{ filing.status }}">
+            {% if filing.status == 'approved' %}✓ 已通过备案
+            {% elif filing.status == 'pending' %}⏳ 审核中
+            {% elif filing.status == 'rejected' %}✕ 已驳回
+            {% elif filing.status == 'revoked' %}⊘ 已注销
+            {% endif %}
+        </span>
+        <h1 class="icp-detail-title">{{ filing.site_name }}</h1>
+        <div class="icp-detail-number">备案号：<strong>{{ filing.filing_number }}</strong></div>
+        <div class="icp-detail-actions">
+            <a href="{{ filing.site_url }}" target="_blank" class="btn btn-primary">
+                🔗 访问网站
+            </a>
+        </div>
+    </div>
+
+    <!-- 备案信息 -->
+    <div class="icp-detail-section">
+        <h3><span class="icon">📋</span>备案信息</h3>
+        <div class="section-body">
+            <div class="attr-table">
+                <div class="attr-row">
+                    <div class="attr-label">备案号</div>
+                    <div class="attr-value">{{ filing.filing_number }}</div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">备案状态</div>
+                    <div class="attr-value">
+                        <span class="filing-status status-{{ filing.status }}">
+                            {% if filing.status == 'approved' %}已通过
+                            {% elif filing.status == 'pending' %}审核中
+                            {% elif filing.status == 'rejected' %}已驳回
+                            {% elif filing.status == 'revoked' %}已注销
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">网站名称</div>
+                    <div class="attr-value">{{ filing.site_name }}</div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">网站地址</div>
+                    <div class="attr-value"><a href="{{ filing.site_url }}" target="_blank">{{ filing.site_url }}</a></div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">域名</div>
+                    <div class="attr-value">{{ filing.domain }}</div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">服务器 IP</div>
+                    <div class="attr-value">{{ filing.ip_addresses or '-' }}</div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">主体类型</div>
+                    <div class="attr-value">{{ '组织' if filing.subject_type == 'organization' else '个人' }}</div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">主体名称</div>
+                    <div class="attr-value">{{ filing.subject_name }}</div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">维护者</div>
+                    <div class="attr-value">{{ filing.mntner }}</div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">AS 号</div>
+                    <div class="attr-value">{{ filing.as_number or '-' }}</div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">申请时间</div>
+                    <div class="attr-value">{{ filing.created_at.strftime('%Y-%m-%d %H:%M') }} UTC</div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">浏览次数</div>
+                    <div class="attr-value">{{ filing.view_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 网站简介 -->
+    {% if filing.site_desc %}
+    <div class="icp-detail-section">
+        <h3><span class="icon">📝</span>网站简介</h3>
+        <div class="section-body">
+            <p style="color: var(--text-secondary); line-height: 1.7;">{{ filing.site_desc }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 审核信息 -->
+    {% if filing.reviewed_at %}
+    <div class="icp-detail-section">
+        <h3><span class="icon">🔍</span>审核信息</h3>
+        <div class="section-body">
+            <div class="attr-table">
+                <div class="attr-row">
+                    <div class="attr-label">审核人</div>
+                    <div class="attr-value">{{ filing.reviewed_by }}</div>
+                </div>
+                <div class="attr-row">
+                    <div class="attr-label">审核时间</div>
+                    <div class="attr-value">{{ filing.reviewed_at.strftime('%Y-%m-%d %H:%M') }} UTC</div>
+                </div>
+                {% if filing.review_note %}
+                <div class="attr-row">
+                    <div class="attr-label">审核意见</div>
+                    <div class="attr-value">{{ filing.review_note }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 备案代码 -->
+    {% if filing.status == 'approved' %}
+    <div class="icp-detail-section">
+        <h3><span class="icon">📌</span>备案展示代码</h3>
+        <div class="section-body">
+            <p style="margin-bottom: 16px; color: var(--text-tertiary); font-size: 14px;">将以下代码复制到你网站的页脚，即可展示备案号并链接回本页</p>
+            <div class="code-block">
+&lt;a href="https://your-site.example/icp/{{ filing.id }}" target="_blank" style="color:inherit;text-decoration:none;"&gt;
+    DN42 ICP备 {{ filing.filing_number }} 号
+&lt;/a&gt;
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

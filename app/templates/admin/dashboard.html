@@ -1,81 +1,86 @@
 {% extends "admin/base.html" %}
 
 {% block title %}概览{% endblock %}
+{% block page_title %}📊 管理概览{% endblock %}
 
 {% block content %}
-<h1>📊 管理概览</h1>
-
-<div class="stats-grid" style="margin-bottom: 32px;">
-    <div class="stat-card">
-        <div class="stat-icon">📋</div>
+<!-- 统计卡片 -->
+<div class="admin-stats">
+    <div class="admin-stat-card">
+        <div class="stat-top">
+            <div class="stat-icon blue">📋</div>
+        </div>
         <div class="stat-number">{{ total_objects }}</div>
         <div class="stat-label">总对象数</div>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon">🏷️</div>
+    <div class="admin-stat-card">
+        <div class="stat-top">
+            <div class="stat-icon purple">🏷️</div>
+        </div>
         <div class="stat-number">{{ total_types }}</div>
         <div class="stat-label">对象类型</div>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon">🔄</div>
-        <div class="stat-number" style="font-size: 16px; line-height: 28px;">
+    <div class="admin-stat-card">
+        <div class="stat-top">
+            <div class="stat-icon green">🔄</div>
+        </div>
+        <div class="stat-number" style="font-size: 18px; line-height: 28px;">
             {% if last_sync %}{{ last_sync.sync_time.strftime('%m-%d %H:%M') }}{% else %}未同步{% endif %}
         </div>
         <div class="stat-label">最后同步</div>
     </div>
-    <div class="stat-card">
+    <div class="admin-stat-card">
+        <div class="stat-top">
+            <div class="stat-icon orange">⚡</div>
+        </div>
         <form method="POST" action="{{ url_for('admin.sync') }}" style="margin: 0;">
-            <button type="submit" class="btn btn-primary" style="margin-top: 4px;">立即同步</button>
+            <button type="submit" class="btn btn-primary btn-sm">立即同步</button>
         </form>
         <div class="stat-label" style="margin-top: 8px;">手动同步数据</div>
     </div>
 </div>
 
 <!-- 各类型分布 -->
-<div class="stats-chart">
-    <h3>📈 对象类型分布</h3>
+<div class="stats-section">
+    <h2 class="stats-section-title">📈 对象类型分布</h2>
     {% set max_count = type_stats[0][1] if type_stats else 1 %}
     <div class="bar-chart">
         {% for type_name, count in type_stats | sort(attribute=1, reverse=True) %}
-        <div class="bar-item">
-            <div class="bar-label">{{ type_name }}</div>
-            <div class="bar-track">
-                <div class="bar-fill" style="width: {{ (count / max_count * 100)|round(1) }}%;"></div>
+        <div class="bar-chart-item">
+            <div class="bar-chart-label">{{ type_name }}</div>
+            <div class="bar-chart-track">
+                <div class="bar-chart-fill" style="width: {{ (count / max_count * 100)|round(1) }}%;"></div>
             </div>
-            <div class="bar-value">{{ count }}</div>
+            <div class="bar-chart-value">{{ count }}</div>
         </div>
         {% endfor %}
     </div>
 </div>
 
 <!-- 同步历史 -->
-<div class="card">
-    <div class="card-header">
-        <h2>🔄 同步历史</h2>
-    </div>
-    <div class="card-body">
-        <ul class="sync-list">
-            {% for record in sync_history %}
-            <li>
-                <div class="sync-info">
-                    <div>{{ record.message }}</div>
-                    <div class="sync-time">
-                        {{ record.sync_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC
-                        {% if record.commit_hash %}· commit: {{ record.commit_hash[:8] }}{% endif %}
-                    </div>
+<div class="stats-section">
+    <h2 class="stats-section-title">🔄 同步历史</h2>
+    <div class="sync-list">
+        {% for record in sync_history %}
+        <div class="sync-item">
+            <div class="sync-item-left">
+                <div class="sync-item-info">{{ record.message }}</div>
+                <div class="sync-item-time">
+                    {{ record.sync_time.strftime('%Y-%m-%d %H:%M:%S') }} UTC
+                    {% if record.commit_hash %}· commit: {{ record.commit_hash[:8] }}{% endif %}
                 </div>
-                <span class="sync-status {{ record.status }}">
-                    {% if record.status == 'success' %}✓ 成功
-                    {% elif record.status == 'failed' %}✗ 失败
-                    {% else %}⟳ 进行中{% endif %}
-                </span>
-            </li>
-            {% else %}
-            <li style="justify-content: center; color: var(--text-muted);">
-                暂无同步记录
-            </li>
-            {% endfor %}
-        </ul>
+            </div>
+            <span class="filing-status status-{% if record.status == 'success' %}approved{% elif record.status == 'failed' %}rejected{% else %}pending{% endif %}">
+                {% if record.status == 'success' %}✓ 成功
+                {% elif record.status == 'failed' %}✗ 失败
+                {% else %}⟳ 进行中{% endif %}
+            </span>
+        </div>
+        {% else %}
+        <div class="sync-item" style="justify-content: center; color: var(--text-muted);">
+            暂无同步记录
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

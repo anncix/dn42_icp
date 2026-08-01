@@ -14,27 +14,61 @@
 
 <!-- 头部信息 -->
 <div class="detail-header">
-    <span class="type-badge {{ obj.obj_type if obj.obj_type in ['aut-num','inetnum','inet6num','dns','mntner','person','organisation','route','route6'] else 'default' }} detail-type">
-        {{ obj.obj_type }}
-    </span>
-    <h1>{{ obj.obj_name or obj.obj_key }}</h1>
-    <div class="detail-subtitle">{{ obj.obj_key }}</div>
+    <div class="detail-header-top">
+        <div>
+            <span class="type-badge {{ obj.obj_type if obj.obj_type in ['aut-num','inetnum','inet6num','dns','mntner','person','organisation','route','route6'] else 'default' }}" style="margin-bottom: 12px;">
+                {{ obj.obj_type }}
+            </span>
+            <h1 class="detail-title">
+                <span class="dt-icon">
+                {% if obj.obj_type == 'aut-num' %}🏢
+                {% elif obj.obj_type == 'dns' %}🔗
+                {% elif obj.obj_type == 'inetnum' %}🌐
+                {% elif obj.obj_type == 'inet6num' %}🌐
+                {% elif obj.obj_type == 'mntner' %}🔑
+                {% elif obj.obj_type == 'person' %}👤
+                {% elif obj.obj_type == 'organisation' %}🏛️
+                {% elif obj.obj_type == 'route' or obj.obj_type == 'route6' %}🛤️
+                {% elif obj.obj_type == 'as-set' %}📦
+                {% elif obj.obj_type == 'role' %}👥
+                {% else %}📋{% endif %}
+                </span>
+                {{ obj.obj_name or obj.obj_key }}
+            </h1>
+            <div class="detail-subtitle">{{ obj.obj_key }}</div>
+        </div>
+    </div>
     <div class="detail-meta">
-        <span>📅 更新时间：{{ obj.updated_at.strftime('%Y-%m-%d %H:%M') }} UTC</span>
-        <span>👁️ 浏览次数：{{ obj.view_count }}</span>
-        {% if obj.source %}<span>📌 来源：{{ obj.source }}</span>{% endif %}
+        <div class="detail-meta-item">
+            <span class="label">更新时间</span>
+            <span class="value">{{ obj.updated_at.strftime('%Y-%m-%d %H:%M') }} UTC</span>
+        </div>
+        <div class="detail-meta-item">
+            <span class="label">浏览次数</span>
+            <span class="value">{{ obj.view_count }}</span>
+        </div>
+        {% if obj.source %}
+        <div class="detail-meta-item">
+            <span class="label">来源</span>
+            <span class="value">{{ obj.source }}</span>
+        </div>
+        {% endif %}
     </div>
 </div>
 
 <!-- 详细属性 -->
 <div class="detail-section">
-    <div class="section-title">📋 详细信息</div>
-    <div class="section-body">
-        <table class="attr-table">
+    <div class="detail-section-header">
+        <div class="detail-section-title">
+            <span class="icon">📋</span>详细信息
+        </div>
+    </div>
+    <div class="detail-section-body">
+        <div class="attr-table">
             {% for item in parsed %}
-            <tr>
-                <th>{{ item.key }}</th>
-                <td>
+            <div class="attr-row">
+                <div class="attr-label">{{ item.key }}</div>
+                <div class="attr-value">
                     {% set val = item.value %}
                     {% set val_lines = val.split('\n') %}
                     {% for line in val_lines %}
@@ -60,70 +94,94 @@
                             {{ line }}
                         {% endif %}
                     {% endfor %}
-                </td>
-            </tr>
+                </div>
+            </div>
             {% endfor %}
-        </table>
+        </div>
     </div>
 </div>
 
 <!-- 关联对象 -->
 {% if related.mnt_by or related.admin_c or related.tech_c or related.routes %}
 <div class="detail-section">
-    <div class="section-title">🔗 关联对象</div>
-    <div class="section-body">
+    <div class="detail-section-header">
+        <div class="detail-section-title">
+            <span class="icon">🔗</span>关联对象
+        </div>
+    </div>
+    <div class="detail-section-body">
         {% if related.mnt_by %}
         <h4 style="margin-bottom: 12px; color: var(--text-secondary); font-size: 14px;">维护者 (mnt-by)</h4>
         {% for m in related.mnt_by %}
-        <a href="{{ url_for('main.detail', obj_type=m.obj_type, obj_key=m.obj_key) }}" class="list-item">
-            <div class="item-icon">🔑</div>
-            <div class="item-content">
-                <div class="item-title">{{ m.obj_name or m.obj_key }}</div>
-                <div class="item-desc">{{ m.obj_key }}</div>
+        <a href="{{ url_for('main.detail', obj_type=m.obj_type, obj_key=m.obj_key) }}" class="list-item" style="margin-bottom: 8px;">
+            <div class="list-item-main" style="display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 18px;">🔑</div>
+                <div>
+                    <div class="list-item-title">{{ m.obj_name or m.obj_key }}</div>
+                    <div class="list-item-sub">{{ m.obj_key }}</div>
+                </div>
             </div>
-            <span class="type-badge mntner">mntner</span>
+            <div class="list-item-meta">
+                <span class="type-badge mntner">mntner</span>
+                <span class="list-item-arrow">→</span>
+            </div>
         </a>
         {% endfor %}
         {% endif %}
         
         {% if related.admin_c %}
-        <h4 style="margin: 16px 0 12px; color: var(--text-secondary); font-size: 14px;">管理员联系人 (admin-c)</h4>
+        <h4 style="margin: 20px 0 12px; color: var(--text-secondary); font-size: 14px;">管理员联系人 (admin-c)</h4>
         {% for p in related.admin_c %}
-        <a href="{{ url_for('main.detail', obj_type=p.obj_type, obj_key=p.obj_key) }}" class="list-item">
-            <div class="item-icon">👤</div>
-            <div class="item-content">
-                <div class="item-title">{{ p.obj_name or p.obj_key }}</div>
-                <div class="item-desc">{{ p.obj_key }}</div>
+        <a href="{{ url_for('main.detail', obj_type=p.obj_type, obj_key=p.obj_key) }}" class="list-item" style="margin-bottom: 8px;">
+            <div class="list-item-main" style="display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 18px;">👤</div>
+                <div>
+                    <div class="list-item-title">{{ p.obj_name or p.obj_key }}</div>
+                    <div class="list-item-sub">{{ p.obj_key }}</div>
+                </div>
             </div>
-            <span class="type-badge person">{{ p.obj_type }}</span>
+            <div class="list-item-meta">
+                <span class="type-badge person">{{ p.obj_type }}</span>
+                <span class="list-item-arrow">→</span>
+            </div>
         </a>
         {% endfor %}
         {% endif %}
         
         {% if related.tech_c %}
-        <h4 style="margin: 16px 0 12px; color: var(--text-secondary); font-size: 14px;">技术联系人 (tech-c)</h4>
+        <h4 style="margin: 20px 0 12px; color: var(--text-secondary); font-size: 14px;">技术联系人 (tech-c)</h4>
         {% for p in related.tech_c %}
-        <a href="{{ url_for('main.detail', obj_type=p.obj_type, obj_key=p.obj_key) }}" class="list-item">
-            <div class="item-icon">👤</div>
-            <div class="item-content">
-                <div class="item-title">{{ p.obj_name or p.obj_key }}</div>
-                <div class="item-desc">{{ p.obj_key }}</div>
+        <a href="{{ url_for('main.detail', obj_type=p.obj_type, obj_key=p.obj_key) }}" class="list-item" style="margin-bottom: 8px;">
+            <div class="list-item-main" style="display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 18px;">👤</div>
+                <div>
+                    <div class="list-item-title">{{ p.obj_name or p.obj_key }}</div>
+                    <div class="list-item-sub">{{ p.obj_key }}</div>
+                </div>
             </div>
-            <span class="type-badge person">{{ p.obj_type }}</span>
+            <div class="list-item-meta">
+                <span class="type-badge person">{{ p.obj_type }}</span>
+                <span class="list-item-arrow">→</span>
+            </div>
         </a>
         {% endfor %}
         {% endif %}
         
         {% if related.routes %}
-        <h4 style="margin: 16px 0 12px; color: var(--text-secondary); font-size: 14px;">宣告路由 (ROA)</h4>
+        <h4 style="margin: 20px 0 12px; color: var(--text-secondary); font-size: 14px;">宣告路由 (ROA)</h4>
         {% for r in related.routes %}
-        <a href="{{ url_for('main.detail', obj_type=r.obj_type, obj_key=r.obj_key) }}" class="list-item">
-            <div class="item-icon">🛤️</div>
-            <div class="item-content">
-                <div class="item-title">{{ r.obj_name or r.obj_key }}</div>
-                <div class="item-desc">{{ r.obj_key }}</div>
+        <a href="{{ url_for('main.detail', obj_type=r.obj_type, obj_key=r.obj_key) }}" class="list-item" style="margin-bottom: 8px;">
+            <div class="list-item-main" style="display: flex; align-items: center; gap: 12px;">
+                <div style="font-size: 18px;">🛤️</div>
+                <div>
+                    <div class="list-item-title">{{ r.obj_name or r.obj_key }}</div>
+                    <div class="list-item-sub">{{ r.obj_key }}</div>
+                </div>
             </div>
-            <span class="type-badge route">{{ r.obj_type }}</span>
+            <div class="list-item-meta">
+                <span class="type-badge route">{{ r.obj_type }}</span>
+                <span class="list-item-arrow">→</span>
+            </div>
         </a>
         {% endfor %}
         {% endif %}
@@ -132,12 +190,39 @@
 {% endif %}
 
 <!-- 原始数据 -->
-<details class="detail-section" style="cursor: pointer;">
-    <summary class="section-title" style="cursor: pointer; list-style: none;">
-        📄 原始 RPSL 数据 (点击展开)
-    </summary>
-    <div class="section-body">
-        <pre class="raw-content">{{ obj.content }}</pre>
+<div class="detail-section">
+    <div class="detail-section-header" style="cursor: pointer;" onclick="this.parentElement.querySelector('.detail-section-body').classList.toggle('hidden'); this.querySelector('.toggle-icon').classList.toggle('rotated');">
+        <div class="detail-section-title">
+            <span class="icon">📄</span>原始 RPSL 数据
+        </div>
+        <span class="toggle-icon" style="transition: transform 0.2s;">▼</span>
     </div>
-</details>
+    <div class="detail-section-body" style="display: none;">
+        <pre style="font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', Consolas, monospace; font-size: 12px; color: var(--text-secondary); background: var(--gray-50); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-light); overflow-x: auto; line-height: 1.6;">{{ obj.content }}</pre>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 原始数据展开/收起
+document.addEventListener('DOMContentLoaded', function() {
+    const sectionHeaders = document.querySelectorAll('.detail-section-header');
+    sectionHeaders.forEach(header => {
+        if (header.style.cursor === 'pointer') {
+            header.addEventListener('click', function() {
+                const body = this.parentElement.querySelector('.detail-section-body');
+                const icon = this.querySelector('.toggle-icon');
+                if (body.style.display === 'none') {
+                    body.style.display = 'block';
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    body.style.display = 'none';
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            });
+        }
+    });
+});
+</script>
 {% endblock %}
