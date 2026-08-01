@@ -3,8 +3,11 @@
 {% block title %}DN42 备案查询系统{% endblock %}
 
 {% block content %}
-<section class="hero">
-    <h1>DN42 <span>备案查询系统</span></h1>
+<section class="hero hero-compact">
+    <div class="hero-brand">
+        <div class="hero-logo">🌐</div>
+        <h1>DN42 <span>备案查询</span></h1>
+    </div>
     <p class="subtitle">查询 dn42 网络资源备案信息 · AS号 · IP段 · 域名 · 维护者</p>
     
     <form class="search-box" action="{{ url_for('main.search') }}" method="get">
@@ -12,142 +15,83 @@
         <button type="submit" class="search-btn">查询</button>
     </form>
     
-    <div class="search-types">
-        <a href="{{ url_for('main.browse', obj_type='aut-num') }}" class="type-tag">🏢 自治系统</a>
-        <a href="{{ url_for('main.browse', obj_type='inetnum') }}" class="type-tag">🌐 IPv4</a>
-        <a href="{{ url_for('main.browse', obj_type='inet6num') }}" class="type-tag">🌐 IPv6</a>
-        <a href="{{ url_for('main.browse', obj_type='dns') }}" class="type-tag">🔗 域名</a>
-        <a href="{{ url_for('main.browse', obj_type='mntner') }}" class="type-tag">👤 维护者</a>
-        <a href="{{ url_for('main.browse', obj_type='person') }}" class="type-tag">👥 联系人</a>
+    <div class="quick-links">
+        <a href="{{ url_for('main.browse', obj_type='aut-num') }}">自治系统</a>
+        <a href="{{ url_for('main.browse', obj_type='inetnum') }}">IPv4</a>
+        <a href="{{ url_for('main.browse', obj_type='inet6num') }}">IPv6</a>
+        <a href="{{ url_for('main.browse', obj_type='dns') }}">域名</a>
+        <a href="{{ url_for('main.browse', obj_type='mntner') }}">维护者</a>
     </div>
 </section>
 
-<!-- 统计数据 -->
-<div class="stats-grid">
-    <a href="{{ url_for('main.browse', obj_type='aut-num') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🏢</div>
-            <div class="stat-number">{{ stats.get('aut-num', 0) }}</div>
-            <div class="stat-label">自治系统</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='inetnum') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🌐</div>
-            <div class="stat-number">{{ stats.get('inetnum', 0) }}</div>
-            <div class="stat-label">IPv4 地址段</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='inet6num') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🔗</div>
-            <div class="stat-number">{{ stats.get('inet6num', 0) }}</div>
-            <div class="stat-label">IPv6 地址段</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='dns') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🏷️</div>
-            <div class="stat-number">{{ stats.get('dns', 0) }}</div>
-            <div class="stat-label">域名</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='mntner') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🔑</div>
-            <div class="stat-number">{{ stats.get('mntner', 0) }}</div>
-            <div class="stat-label">维护者</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='person') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">👤</div>
-            <div class="stat-number">{{ stats.get('person', 0) }}</div>
-            <div class="stat-label">个人联系人</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.browse', obj_type='organisation') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">🏛️</div>
-            <div class="stat-number">{{ stats.get('organisation', 0) }}</div>
-            <div class="stat-label">组织</div>
-        </div>
-    </a>
-    <a href="{{ url_for('main.stats') }}" style="text-decoration: none; color: inherit;">
-        <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div class="stat-number">{{ stats.values() | sum }}</div>
-            <div class="stat-label">总记录数</div>
-        </div>
-    </a>
+<!-- 数据概览 -->
+<div class="overview-bar">
+    <div class="overview-item">
+        <span class="ov-num">{{ stats.get('aut-num', 0) }}</span>
+        <span class="ov-label">自治系统</span>
+    </div>
+    <div class="ov-divider"></div>
+    <div class="overview-item">
+        <span class="ov-num">{{ stats.get('inetnum', 0) + stats.get('inet6num', 0) }}</span>
+        <span class="ov-label">IP 地址段</span>
+    </div>
+    <div class="ov-divider"></div>
+    <div class="overview-item">
+        <span class="ov-num">{{ stats.get('dns', 0) }}</span>
+        <span class="ov-label">域名</span>
+    </div>
+    <div class="ov-divider"></div>
+    <div class="overview-item">
+        <span class="ov-num">{{ stats.get('mntner', 0) }}</span>
+        <span class="ov-label">维护者</span>
+    </div>
+    <div class="ov-divider"></div>
+    <div class="overview-item">
+        <span class="ov-num">{{ stats.values() | sum }}</span>
+        <span class="ov-label">总记录</span>
+    </div>
 </div>
 
-<!-- 两列布局 -->
-<div class="two-col">
-    <!-- 最近更新 -->
-    <div class="card">
-        <div class="card-header">
-            <h2>🔥 最近更新</h2>
-            <a href="{{ url_for('main.browse', obj_type='aut-num', sort='views') }}" class="more-link">查看更多 →</a>
-        </div>
-        <div class="card-body">
-            {% for obj in recent_updates %}
-            <a href="{{ url_for('main.detail', obj_type=obj.obj_type, obj_key=obj.obj_key) }}" class="list-item">
-                <div class="item-icon">
-                {% if obj.obj_type == 'aut-num' %}🏢
-                {% elif obj.obj_type == 'dns' %}🔗
-                {% elif obj.obj_type == 'inetnum' %}🌐
-                {% elif obj.obj_type == 'inet6num' %}🌐
-                {% elif obj.obj_type == 'mntner' %}🔑
-                {% elif obj.obj_type == 'person' %}👤
-                {% elif obj.obj_type == 'organisation' %}🏛️
-                {% else %}📋{% endif %}
-                </div>
-                <div class="item-content">
-                    <div class="item-title">{{ obj.obj_name or obj.obj_key }}</div>
-                    <div class="item-desc">{{ obj.obj_key }}</div>
-                </div>
-                <span class="type-badge {{ obj.obj_type if obj.obj_type in ['aut-num','inetnum','inet6num','dns','mntner','person','organisation','route','route6'] else 'default' }}">
-                    {{ obj.obj_type }}
-                </span>
-            </a>
-            {% else %}
-            <div class="empty-state">
-                <div class="empty-icon">📭</div>
-                <div class="empty-text">暂无数据</div>
-            </div>
-            {% endfor %}
-        </div>
+<!-- 热门自治系统 -->
+<div class="section">
+    <div class="section-header">
+        <h2>🔥 热门自治系统</h2>
+        <a href="{{ url_for('main.browse', obj_type='aut-num', sort='views') }}" class="more-link">查看全部 →</a>
     </div>
-
-    <!-- 热门查询 -->
-    <div class="card">
-        <div class="card-header">
-            <h2>⭐ 热门查询</h2>
-            <a href="{{ url_for('main.browse', obj_type='aut-num', sort='views') }}" class="more-link">查看更多 →</a>
-        </div>
-        <div class="card-body">
-            {% for obj in hot_objects %}
-            <a href="{{ url_for('main.detail', obj_type=obj.obj_type, obj_key=obj.obj_key) }}" class="list-item">
-                <div class="item-icon">
-                {% if obj.obj_type == 'aut-num' %}🏢
-                {% elif obj.obj_type == 'dns' %}🔗
-                {% elif obj.obj_type == 'mntner' %}🔑
-                {% else %}📋{% endif %}
-                </div>
-                <div class="item-content">
-                    <div class="item-title">{{ obj.obj_name or obj.obj_key }}</div>
-                    <div class="item-desc">{{ obj.obj_key }}</div>
-                </div>
-                <div class="item-meta">{{ obj.view_count }} 次</div>
-            </a>
-            {% else %}
-            <div class="empty-state">
-                <div class="empty-icon">📭</div>
-                <div class="empty-text">暂无数据</div>
+    <div class="hot-grid">
+        {% for obj in hot_objects %}
+        <a href="{{ url_for('main.detail', obj_type=obj.obj_type, obj_key=obj.obj_key) }}" class="hot-card">
+            <div class="hot-rank">{{ loop.index }}</div>
+            <div class="hot-info">
+                <div class="hot-name">{{ obj.obj_name or obj.obj_key }}</div>
+                <div class="hot-key">{{ obj.obj_key }}</div>
             </div>
-            {% endfor %}
-        </div>
+            <div class="hot-views">{{ obj.view_count }} <span>次浏览</span></div>
+        </a>
+        {% else %}
+        <div class="empty-mini">暂无数据</div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 最近更新 -->
+<div class="section">
+    <div class="section-header">
+        <h2>🆕 最近更新</h2>
+        <a href="{{ url_for('main.browse', obj_type='aut-num') }}" class="more-link">查看全部 →</a>
+    </div>
+    <div class="recent-list">
+        {% for obj in recent_updates[:6] %}
+        <a href="{{ url_for('main.detail', obj_type=obj.obj_type, obj_key=obj.obj_key) }}" class="recent-item">
+            <span class="recent-type type-badge {{ obj.obj_type if obj.obj_type in ['aut-num','inetnum','inet6num','dns','mntner','person','organisation','route','route6'] else 'default' }}">
+                {{ obj.obj_type }}
+            </span>
+            <span class="recent-name">{{ obj.obj_name or obj.obj_key }}</span>
+            <span class="recent-key">{{ obj.obj_key }}</span>
+        </a>
+        {% else %}
+        <div class="empty-mini">暂无数据</div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}
