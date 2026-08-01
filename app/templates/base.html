@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DN42 备案查询系统{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="{{ url_for('main.index') }}" class="navbar-brand">
+                <div class="logo">🌐</div>
+                <div class="brand-text">
+                    <div>DN42 备案</div>
+                    <div class="sub">Registry Explorer</div>
+                </div>
+            </a>
+            <ul class="navbar-nav">
+                <li><a href="{{ url_for('main.index') }}" class="{% if request.endpoint == 'main.index' %}active{% endif %}">首页</a></li>
+                <li><a href="{{ url_for('main.search') }}" class="{% if request.endpoint == 'main.search' %}active{% endif %}">查询</a></li>
+                <li><a href="{{ url_for('main.browse', obj_type='aut-num') }}" class="{% if request.endpoint == 'main.browse' %}active{% endif %}">浏览</a></li>
+                <li><a href="{{ url_for('main.stats') }}" class="{% if request.endpoint == 'main.stats' %}active{% endif %}">统计</a></li>
+                {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('admin.dashboard') }}">管理</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-links">
+            <a href="https://dn42.dev" target="_blank">dn42 官网</a>
+            <a href="https://git.dn42.dev/dn42/registry" target="_blank">Registry 仓库</a>
+            <a href="https://explorer.burble.com/" target="_blank">burble Explorer</a>
+            <a href="{{ url_for('main.stats') }}">数据统计</a>
+        </div>
+        <div>
+            DN42 备案查询系统 · 数据来源于 
+            <a href="https://git.dn42.dev/dn42/registry" target="_blank">dn42 Registry</a>
+            {% if last_sync %}
+            · 最后同步：{{ last_sync.sync_time.strftime('%Y-%m-%d %H:%M') }} UTC
+            {% endif %}
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

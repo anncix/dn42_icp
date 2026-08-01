@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}{{ type_name }} - 浏览 - DN42 备案查询系统{% endblock %}
+
+{% block content %}
+<!-- 面包屑 -->
+<div class="breadcrumb">
+    <a href="{{ url_for('main.index') }}">首页</a>
+    <span class="sep">/</span>
+    <span>{{ type_name }}</span>
+</div>
+
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-header">
+        <h2>{{ type_name }} ({{ total }})</h2>
+    </div>
+    <div class="card-body">
+        <!-- 排序 -->
+        <div class="sort-bar">
+            <span style="font-size: 13px; color: var(--text-muted); padding: 6px 0;">排序：</span>
+            <a href="{{ url_for('main.browse', obj_type=obj_type, sort='key') }}" class="{% if sort == 'key' %}active{% endif %}">
+                按名称
+            </a>
+            <a href="{{ url_for('main.browse', obj_type=obj_type, sort='views') }}" class="{% if sort == 'views' %}active{% endif %}">
+                按热度
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if results and results.items %}
+<div class="card">
+    <div class="card-body">
+        {% for obj in results.items %}
+        <a href="{{ url_for('main.detail', obj_type=obj.obj_type, obj_key=obj.obj_key) }}" class="list-item">
+            <div class="item-icon">
+            {% if obj.obj_type == 'aut-num' %}🏢
+            {% elif obj.obj_type == 'dns' %}🔗
+            {% elif obj.obj_type == 'inetnum' %}🌐
+            {% elif obj.obj_type == 'inet6num' %}🌐
+            {% elif obj.obj_type == 'mntner' %}🔑
+            {% elif obj.obj_type == 'person' %}👤
+            {% elif obj.obj_type == 'organisation' %}🏛️
+            {% elif obj.obj_type == 'route' or obj.obj_type == 'route6' %}🛤️
+            {% elif obj.obj_type == 'as-set' %}📦
+            {% elif obj.obj_type == 'role' %}👥
+            {% else %}📋{% endif %}
+            </div>
+            <div class="item-content">
+                <div class="item-title">{{ obj.obj_name or obj.obj_key }}</div>
+                <div class="item-desc">{{ obj.obj_key }}
+                    {% if obj.mnt_by %} · mnt: {{ obj.mnt_by }}{% endif %}
+                </div>
+            </div>
+            <div class="item-meta">
+                {% if sort == 'views' %}{{ obj.view_count }} 次{% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 分页 -->
+{% if results.pages > 1 %}
+<div class="pagination">
+    {% if results.has_prev %}
+    <a href="{{ url_for('main.browse', obj_type=obj_type, sort=sort, page=results.prev_num) }}">上一页</a>
+    {% else %}
+    <span class="disabled">上一页</span>
+    {% endif %}
+    
+    {% for p in range(1, results.pages + 1) %}
+        {% if p == results.page %}
+        <span class="current">{{ p }}</span>
+        {% elif p <= 3 or p >= results.pages - 2 or (p >= results.page - 1 and p <= results.page + 1) %}
+        <a href="{{ url_for('main.browse', obj_type=obj_type, sort=sort, page=p) }}">{{ p }}</a>
+        {% elif p == 4 or p == results.pages - 3 %}
+        <span>...</span>
+        {% endif %}
+    {% endfor %}
+    
+    {% if results.has_next %}
+    <a href="{{ url_for('main.browse', obj_type=obj_type, sort=sort, page=results.next_num) }}">下一页</a>
+    {% else %}
+    <span class="disabled">下一页</span>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <div class="empty-text">暂无数据</div>
+    <div class="empty-hint">请先同步 dn42 Registry 数据</div>
+</div>
+{% endif %}
+{% endblock %}

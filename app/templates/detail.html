@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}{{ obj.obj_name or obj.obj_key }} - DN42 备案详情{% endblock %}
+
+{% block content %}
+<!-- 面包屑 -->
+<div class="breadcrumb">
+    <a href="{{ url_for('main.index') }}">首页</a>
+    <span class="sep">/</span>
+    <a href="{{ url_for('main.browse', obj_type=obj.obj_type) }}">{{ obj.obj_type }}</a>
+    <span class="sep">/</span>
+    <span>{{ obj.obj_key }}</span>
+</div>
+
+<!-- 头部信息 -->
+<div class="detail-header">
+    <span class="type-badge {{ obj.obj_type if obj.obj_type in ['aut-num','inetnum','inet6num','dns','mntner','person','organisation','route','route6'] else 'default' }} detail-type">
+        {{ obj.obj_type }}
+    </span>
+    <h1>{{ obj.obj_name or obj.obj_key }}</h1>
+    <div class="detail-subtitle">{{ obj.obj_key }}</div>
+    <div class="detail-meta">
+        <span>📅 更新时间：{{ obj.updated_at.strftime('%Y-%m-%d %H:%M') }} UTC</span>
+        <span>👁️ 浏览次数：{{ obj.view_count }}</span>
+        {% if obj.source %}<span>📌 来源：{{ obj.source }}</span>{% endif %}
+    </div>
+</div>
+
+<!-- 详细属性 -->
+<div class="detail-section">
+    <div class="section-title">📋 详细信息</div>
+    <div class="section-body">
+        <table class="attr-table">
+            {% for item in parsed %}
+            <tr>
+                <th>{{ item.key }}</th>
+                <td>
+                    {% set val = item.value %}
+                    {% set val_lines = val.split('\n') %}
+                    {% for line in val_lines %}
+                        {% if loop.index0 > 0 %}<br>{% endif %}
+                        {# 尝试检测可链接的内容 #}
+                        {% set trimmed = line.strip() %}
+                        {% if trimmed.startswith('AS') and trimmed[2:].isdigit() %}
+                            <a href="{{ url_for('main.detail', obj_type='aut-num', obj_key=trimmed) }}">{{ line }}</a>
+                        {% elif trimmed.endswith('.dn42') and obj.obj_type != 'dns' %}
+                            <a href="{{ url_for('main.search', q=trimmed, type='dns') }}">{{ line }}</a>
+                        {% elif '-' in trimmed and obj.obj_type in ['route', 'route6'] %}
+                            {# origin AS 检测 #}
+                            {% set parts = trimmed.split() %}
+                            {% for p in parts %}
+                                {% if p.startswith('AS') %}
+                                    <a href="{{ url_for('main.detail', obj_type='aut-num', obj_key=p) }}">{{ p }}</a>
+                                {% else %}
+                                    {{ p }}
+                                {% endif %}
+                                {% if not loop.last %} {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            {{ line }}
+                        {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<!-- 关联对象 -->
+{% if related.mnt_by or related.admin_c or related.tech_c or related.routes %}
+<div class="detail-section">
+    <div class="section-title">🔗 关联对象</div>
+    <div class="section-body">
+        {% if related.mnt_by %}
+        <h4 style="margin-bottom: 12px; color: var(--text-secondary); font-size: 14px;">维护者 (mnt-by)</h4>
+        {% for m in related.mnt_by %}
+        <a href="{{ url_for('main.detail', obj_type=m.obj_type, obj_key=m.obj_key) }}" class="list-item">
+            <div class="item-icon">🔑</div>
+            <div class="item-content">
+                <div class="item-title">{{ m.obj_name or m.obj_key }}</div>
+                <div class="item-desc">{{ m.obj_key }}</div>
+            </div>
+            <span class="type-badge mntner">mntner</span>
+        </a>
+        {% endfor %}
+        {% endif %}
+        
+        {% if related.admin_c %}
+        <h4 style="margin: 16px 0 12px; color: var(--text-secondary); font-size: 14px;">管理员联系人 (admin-c)</h4>
+        {% for p in related.admin_c %}
+        <a href="{{ url_for('main.detail', obj_type=p.obj_type, obj_key=p.obj_key) }}" class="list-item">
+            <div class="item-icon">👤</div>
+            <div class="item-content">
+                <div class="item-title">{{ p.obj_name or p.obj_key }}</div>
+                <div class="item-desc">{{ p.obj_key }}</div>
+            </div>
+            <span class="type-badge person">{{ p.obj_type }}</span>
+        </a>
+        {% endfor %}
+        {% endif %}
+        
+        {% if related.tech_c %}
+        <h4 style="margin: 16px 0 12px; color: var(--text-secondary); font-size: 14px;">技术联系人 (tech-c)</h4>
+        {% for p in related.tech_c %}
+        <a href="{{ url_for('main.detail', obj_type=p.obj_type, obj_key=p.obj_key) }}" class="list-item">
+            <div class="item-icon">👤</div>
+            <div class="item-content">
+                <div class="item-title">{{ p.obj_name or p.obj_key }}</div>
+                <div class="item-desc">{{ p.obj_key }}</div>
+            </div>
+            <span class="type-badge person">{{ p.obj_type }}</span>
+        </a>
+        {% endfor %}
+        {% endif %}
+        
+        {% if related.routes %}
+        <h4 style="margin: 16px 0 12px; color: var(--text-secondary); font-size: 14px;">宣告路由 (ROA)</h4>
+        {% for r in related.routes %}
+        <a href="{{ url_for('main.detail', obj_type=r.obj_type, obj_key=r.obj_key) }}" class="list-item">
+            <div class="item-icon">🛤️</div>
+            <div class="item-content">
+                <div class="item-title">{{ r.obj_name or r.obj_key }}</div>
+                <div class="item-desc">{{ r.obj_key }}</div>
+            </div>
+            <span class="type-badge route">{{ r.obj_type }}</span>
+        </a>
+        {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- 原始数据 -->
+<details class="detail-section" style="cursor: pointer;">
+    <summary class="section-title" style="cursor: pointer; list-style: none;">
+        📄 原始 RPSL 数据 (点击展开)
+    </summary>
+    <div class="section-body">
+        <pre class="raw-content">{{ obj.content }}</pre>
+    </div>
+</details>
+{% endblock %}
